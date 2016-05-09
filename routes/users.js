@@ -7,6 +7,6 @@ router.get('/index', usersController.index);
 
 router.get('/find', usersController.find);
 
-router.put('/process_summoner', usersController.find);
+router.post('/tell_summoner', usersController.tell_summoner);
 
 module.exports = router;
