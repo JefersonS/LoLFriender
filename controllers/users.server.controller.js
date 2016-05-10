@@ -48,7 +48,6 @@ module.exports = {
 	},
 
 	get_friends: function(req, res){
-		console.log('opa');
 		var name = req.query.name;
 		var id = req.query.id;
 		var region = req.query.region;
@@ -254,7 +253,7 @@ function find_insert_division_tier_fellows(region, name, processId, fellowPlayer
  * returns a list with id, moment (manhã, noite, etc), league, division, moment (how many times a given moment exists)
  */
 
-function find_time_and_elo(callback){
+function find_time_and_elo(id, callback){
 	Summoner.aggregate(
 		[
 			{
@@ -294,7 +293,7 @@ function find_time_and_elo(callback){
  * this list is created inside each occurrence of summoner_info, generated in find_time_and_elo()
  */
 
-function find_and_create_summoner_list(summoner_info, callback){
+function find_and_create_summoner_list(id, summoner_info, callback){
 	var summoners_ids = [];
 
 	each(summoner_info, function(each_info, each_callback_1){
@@ -344,7 +343,7 @@ function find_and_create_summoner_list(summoner_info, callback){
  * Find the name of each summoner in summoner_info
  */
 
-function find_each_summoner_name(summoner_info, summoners_ids, callback){
+function find_each_summoner_name(id, region, summoner_info, summoners_ids, callback){
 	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST)+1;
 
 	whilst(
@@ -368,7 +367,7 @@ function find_each_summoner_name(summoner_info, summoners_ids, callback){
 								each(each_info.summoners, function(info, each_callback_3){		// URGENT need of uderscore.js
 									if(info.id == value){
 /*hadouken --)*/						info.name = body[value].name;
-/*hadouken --)*/						info.profileIconId = body[value].profileIconId;
+/*hadouken --)*/						info.icon = body[value].profileIconId;
 									}
 									
 									each_callback_3(null);

@@ -28,7 +28,7 @@ $('.navbar-collapse ul li a').click(function() {
 
 var app = angular.module('app', []);
 app.controller('ResultsCtrl', ['$scope', function($scope){
-	$scope.results = [{"name":"haiyk","data":[{"_id":{"id":"4030160","moment":"madrugada","league":"PLATINUM","division":"V"},"moment":42,"summoners":[{"id":"1071567","moment":"madrugada","league":"PLATINUM","division":"V"}]},{"_id":{"id":"4030160","moment":"noite","league":"PLATINUM","division":"V"},"moment":30,"summoners":[{"id":"1711331","moment":"noite","league":"PLATINUM","division":"III"},{"id":"632567","moment":"noite","league":"PLATINUM","division":"V"},{"id":"3997246","moment":"noite","league":"PLATINUM","division":"IV"},{"id":"402122","moment":"noite","league":"PLATINUM","division":"V"},{"id":"1786628","moment":"noite","league":"PLATINUM","division":"V"},{"id":"1169331","moment":"noite","league":"PLATINUM","division":"V"},{"id":"3511509","moment":"noite","league":"PLATINUM","division":"IV"}]},{"_id":{"id":"4030160","moment":"tarde","league":"PLATINUM","division":"V"},"moment":9,"summoners":[]}]}];
+	$scope.results = [];//[{"name":"haiyk","data":[{"_id":{"id":"4030160","moment":"madrugada","league":"PLATINUM","division":"V"},"moment":42,"summoners":[{"id":"1071567","moment":"madrugada","league":"PLATINUM","division":"V","name":"Drakerer","icon":661}]},{"_id":{"id":"4030160","moment":"noite","league":"PLATINUM","division":"V"},"moment":30,"summoners":[{"id":"1711331","moment":"noite","league":"PLATINUM","division":"III","name":"GG Daniel RxVrau","icon":546},{"id":"632567","moment":"noite","league":"PLATINUM","division":"V","name":"JoaoMartins","icon":579},{"id":"3997246","moment":"noite","league":"PLATINUM","division":"IV","name":"Meubonequinho","icon":592},{"id":"402122","moment":"noite","league":"PLATINUM","division":"V","name":"Jobulani","icon":519},{"id":"1786628","moment":"noite","league":"PLATINUM","division":"V","name":"iMrKite","icon":589},{"id":"1169331","moment":"noite","league":"PLATINUM","division":"V","name":"SAUDADES URF ","icon":502},{"id":"3511509","moment":"noite","league":"PLATINUM","division":"IV","name":"im captain julio","icon":12},{"id":"2612815","moment":"noite","league":"PLATINUM","division":"I","name":"FollowYourButt","icon":1133},{"id":"409368","moment":"noite","league":"PLATINUM","division":"II","name":"Clearly","icon":1151},{"id":"5063191","moment":"noite","league":"PLATINUM","division":"I","name":"Royalty Nordus","icon":1126},{"id":"3171958","moment":"noite","league":"PLATINUM","division":"V","name":"FollowYourHeart","icon":984},{"id":"436613","moment":"noite","league":"PLATINUM","division":"II","name":"JoseEputifari","icon":23}]},{"_id":{"id":"4030160","moment":"tarde","league":"PLATINUM","division":"V"},"moment":9,"summoners":[{"id":"1091979","moment":"tarde","league":"PLATINUM","division":"IV","name":"Vigh the Voight","icon":550},{"id":"1102279","moment":"tarde","league":"PLATINUM","division":"IV","name":"Look Sky Walked","icon":576},{"id":"1986225","moment":"tarde","league":"PLATINUM","division":"IV","name":"KradYsnetni","icon":712}]}]}];
 
 	var socket = io();
 	socket.on('searchReady', function(s){
@@ -39,6 +39,10 @@ app.controller('ResultsCtrl', ['$scope', function($scope){
 					data: data
 				});
 			});
+
+			$("#inProgress").slideUp();
+			$("#name").removeAttr("disabled");
+			$("#findBtn").show();
 		});
 	});
 
