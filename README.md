@@ -14,13 +14,14 @@ The project was built using NodeJS and MongoDB. So after installing that just np
 
 > **Note:**
 
-> - Check if inside config/env/local.js and complete with your api key.
+> - Check the settings file config/env/local.js and complete with your api key.
 
 
 Authors
 -------------
 
 [Jeferson Euclides](https://github.com/JefersonS)
+
 [Tulio Faria](https://github.com/tuliofaria)
 
 
