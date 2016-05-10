@@ -11,6 +11,7 @@ var summoner = Schema({
 var SummonerSchema = new Schema({
 	region: String,
 	date_finished: String,
+	moment: String,
 	summoner: summoner,
 	fellowPlayer: summoner
 });

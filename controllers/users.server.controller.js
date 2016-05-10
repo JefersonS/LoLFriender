@@ -17,6 +17,7 @@ var Summoner = require('mongoose').model('Summoner');
 var moment = require('moment');
 config = require('../config/config');
 var name = "";
+var region = "";
 var id = "";
 
 const MAXIMUM_IDS_PER_REQUEST = 10;
@@ -35,6 +36,8 @@ module.exports = {
 	find: function(req, res){
 		var name = req.query.name;
 		var processId = req.query.processId;
+		var region = req.query.region;
+		
 		res.json({ success: true, 'summoner': name });
 
 		process_summoner();		
@@ -44,12 +47,13 @@ module.exports = {
 		var name = req.body.name;
 		id = req.body.id;
  		waterfall([
+ 			find_time_and_elo,
  			find_and_create_summoner_list,
- 			change_date_to_time,
- 			define_time,
- 			sort_array
+ 			find_each_summoner_name
  		], function(err, list_of_options){
- 			console.log(list_of_options);
+ 			//needed list
+ 			
+ 			res.send("ok");
  		});
 	},
 }
@@ -67,7 +71,7 @@ function process_summoner(){
 			find_insert_division_tier_fellows
 		], function (err, summoner_id) {
 			console.log("End of process for summoner: " + name + " id: " + summoner_id);
-			request.post('https://5f44640b.ngrok.io/users/tell_summoner').form({name:name, id: summoner_id});
+			request.post('https://9804b83f.ngrok.io/users/tell_summoner').form({name:name, id: summoner_id});
 			//request.post('http://service.com/upload').form({key:'value'})
 		});		
 	}
@@ -77,7 +81,7 @@ function process_summoner(){
  */
 
 function find_id_by_name(callback) {
-	request('https://br.api.pvp.net/api/lol/br/v1.4/summoner/by-name/'+name+'?api_key='+config.key, function (error, response, body) {
+	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/by-name/'+name+'?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    body = (JSON.parse(body));
     	callback(null, body[name].id);
@@ -92,7 +96,7 @@ function find_id_by_name(callback) {
  */
 
 function find_recent_games(summoner_id, callback) {
-	request('https://br.api.pvp.net/api/lol/br/v1.3/game/by-summoner/'+summoner_id+'/recent?api_key='+config.key, function (error, response, body) {
+	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.3/game/by-summoner/'+summoner_id+'/recent?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    body = (JSON.parse(body));
     	callback(null, body["games"], summoner_id);
@@ -108,17 +112,20 @@ function find_recent_games(summoner_id, callback) {
 
 function save_summoner_fellow_player(games, summoner_id, callback) {
     var fellowPlayers = "";
+
     each(games, function(value, each_callback){
     	each(value["fellowPlayers"], function(value2, each_callback2){
     		fellowPlayers += value2.summonerId+",";
+    		var hour_played = moment(parseInt(value.createDate)).format("HH:mm").toString();
         	Summoner.update(
         	{
         		"summoner.summoner_id": summoner_id,
         		"fellowPlayer.summoner_id": value2.summonerId
         	},
         	{
-        		region: "br",
-				date_finished: value.createDate,
+        		region: region,
+				date_finished: hour_played,
+				moment: define_moment(hour_played),
         		summoner: {
         			summoner_id: summoner_id,
         			champion_id: value.championId
@@ -146,7 +153,7 @@ function save_summoner_fellow_player(games, summoner_id, callback) {
  */
 
 function find_insert_division_tier_summoner(summoner_id, fellowPlayers, callback){
-	request('https://br.api.pvp.net/api/lol/br/v2.5/league/by-summoner/'+summoner_id+'/entry?api_key='+config.key, function (error, response, body) {
+	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v2.5/league/by-summoner/'+summoner_id+'/entry?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    body = (JSON.parse(body));
 
@@ -179,13 +186,14 @@ function find_insert_division_tier_summoner(summoner_id, fellowPlayers, callback
 function find_insert_division_tier_fellows(fellowPlayers, summoner_id, callback){
 	var fellowPlayers_to_array = fellowPlayers.split(",");
 	var times_to_repeat = parseInt(fellowPlayers_to_array.length/MAXIMUM_IDS_PER_REQUEST);
+
 	whilst(
 	    function(){ return times_to_repeat > 0 },
 	    function(whilst_callback){
     		var fellowPlayers_list = fellowPlayers_to_array.splice(0, MAXIMUM_IDS_PER_REQUEST);
     		fellowPlayers_list = fellowPlayers_list.toString();
     		if(fellowPlayers_list != "" && fellowPlayers_list != " "){
-		    	request('https://br.api.pvp.net/api/lol/br/v2.5/league/by-summoner/'+fellowPlayers_list+'/entry?api_key='+config.key, function (error, response, body) {
+		    	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v2.5/league/by-summoner/'+fellowPlayers_list+'/entry?api_key='+config.key, function (error, response, body) {
 				  if (!error && response.statusCode == 200) {
 				    body = (JSON.parse(body));
 		        	fellowPlayers_list = fellowPlayers_list.split(",");
@@ -228,74 +236,150 @@ function find_insert_division_tier_fellows(fellowPlayers, summoner_id, callback)
 	);
 }
 
-function find_and_create_summoner_list(callback){
-	var list_of_options = [];
+function find_time_and_elo(callback){
+	Summoner.aggregate(
+		[
+			{
+				$match:{
+					"summoner.summoner_id" : id
+				}
+			},
+			{
+				$group:{
+					_id:{
+						id: "$summoner.summoner_id",
+						moment: "$moment",
+						league: "$summoner.league",
+						division: "$summoner.division"
+					},
+					moment:{
+						$sum: 1
+					}
+				}
+			},
+			{
+				$sort:{
+					moment: -1
+				}
+			},
+			{
+				$limit: 3
+			}
+		], function(err, summoner_info){
 
-	Summoner.find(
-		{$or:[
-			{"summoner.summoner_id": id},
-			{"fellowPlayer.summoner_id": id}
-		]},
-		function(err, list){
-			each(list, function(value, each_callback){
-				if(value.summoner.summoner_id == id){
-					list_of_options.push(
-						{
+			callback(null, summoner_info);
+		});
+}
+
+function find_and_create_summoner_list(summoner_info, callback){
+	var summoners_ids = [];
+
+	each(summoner_info, function(each_info, each_callback_1){
+		each_info.summoners = [];
+
+		Summoner.find(
+			{$or:[
+				{"summoner.summoner_id": id, "fellowPlayer.league": each_info._id.league, moment: each_info._id.moment}, // Won't look for divisions, once it's the same League, they're probably
+				{"fellowPlayer.summoner_id": id, "summoner.league": each_info._id.league, moment: each_info._id.moment}  // able to play together (TODO: exception for Diamond players and higher)
+			]},
+			function(err, list){
+				each(list, function(value, each_callback_2){
+					if(value.summoner.summoner_id == id){
+						summoners_ids.push(value.fellowPlayer.summoner_id);
+						each_info.summoners.push({
 							id: value.fellowPlayer.summoner_id,
-							time: value.date_finished,
-							tier: value.fellowPlayer.league,
+							moment: value.moment,
+							league: value.fellowPlayer.league,
 							division: value.fellowPlayer.division
-						}
-					);
-					each_callback(null);
-				}else{
-					list_of_options.push(
-						{
+						});
+
+						each_callback_2(null);
+					}else{
+						summoners_ids.push(value.summoner.summoner_id);
+						each_info.summoners.push({
 							id: value.summoner.summoner_id,
-							time: value.date_finished,
+							moment: value.moment,
 							tier: value.summoner.league,
 							division: value.summoner.division
+						});
+
+						each_callback_2(null);
+					}
+				}, function(err){
+
+					each_callback_1(null);
+				});
+			}
+		);
+	}, function(err){
+
+		callback(null, summoner_info, summoners_ids);
+	});
+}
+
+function find_each_summoner_name(summoner_info, summoners_ids, callback){
+	
+/*	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/'+summoners_ids.toString()+'?api_key='+config.key, function (error, response, body) {
+	  if (!error && response.statusCode == 200) {
+	    body = (JSON.parse(body));
+	    console.log(body);
+    	callback(null, body["games"]);
+	  }else{
+	  	callback({error: error, response: response});
+	  }
+	});*/
+
+	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST);
+
+	whilst(
+	    function(){ return times_to_repeat > 0 },
+	    function(whilst_callback){
+    		var summoners_ids_spliced = summoners_ids.splice(0, MAXIMUM_IDS_PER_REQUEST);
+    		summoners_ids_spliced = summoners_ids_spliced.toString();
+    		if(summoners_ids_spliced != "" && summoners_ids_spliced != " "){
+		    	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/'+summoners_ids_spliced+'?api_key='+config.key, function (error, response, body) {
+				  if (!error && response.statusCode == 200) {
+				    body = (JSON.parse(body));
+		        	summoners_ids_spliced = summoners_ids_spliced.split(",");
+			    	each(summoners_ids_spliced, function(value, each_callback_1){
+			    		if(body[value] != undefined){
+							each(summoner_info, function(each_info, each_callback_2){
+								/*
+								 * might be useful in some time
+								 */
+								each(each_info.summoners, function(info, each_callback_3){		// URGENT need of uderscore.js
+									if(info.id == value){
+/*hadouken --)*/						info.name = body[value].name;
+									}
+									
+									each_callback_3(null);
+								}, function(err){
+
+									each_callback_2(null);
+								});
+							}, function(err){
+								each_callback_1(null, summoner_info);
+							});	
+						}else{
+							each_callback_1(null);
 						}
-					);
-					each_callback(null);
-				}
-			}, function(err){
-				callback(null, list_of_options);
-			});
-		}
+			    	}, function(err){
+			    		times_to_repeat--;
+			    		whilst_callback(null);
+			    	});
+				  }else{
+				  	times_to_repeat--;
+				  	whilst_callback({error: error, response: response});
+				  }
+				});
+			}else{
+				times_to_repeat--;
+				whilst_callback(null);
+			}		       	
+	    }, function (err) {
+	        callback(null, summoner_info);
+	    }
 	);
-}
-
-function change_date_to_time(list_of_options, callback){
-	each(list_of_options, function(value, each_callback){
-		value.time = moment(parseInt(value.time)).format("HH:mm").toString();
-		each_callback(null);
-	}, function(err){
-		callback(null, list_of_options);
-	});
-}
-
-function define_time(list_of_options, callback){
-	each(list_of_options, function(value, each_callback){
-		value.moment = define_moment(value.time);
-		each_callback(null);
-	}, function(err){
-		callback(null, list_of_options);
-	});
-}
-
-/*function find_match(list_of_options, callback){
-	each(list_of_options, function(value, each_callback){
-		value.moment = define_moment(value.time);
-		each_callback(null);
-	}, function(err){
-		callback(null, list_of_options);
-	});
-}*/
-
-function sort_array(list_of_options, callback){
-	list_of_options.sort(function(value1, value2){ return value1 - value2 })
-	callback(null, list_of_options);
 }
 
 function define_moment(value){
@@ -303,7 +387,7 @@ function define_moment(value){
 	if(value >= MANHA && value < DIA){ value = "manha"; }
 	if(value >= DIA && value < TARDE){ value = "dia"; }
 	if(value >= TARDE && value < NOITE){ value = "tarde"; }
-	if(value >= NOITE && value < FIM_NOITE){ value = "noite"; }
+	if(value >= NOITE && value <= FIM_NOITE){ value = "noite"; }
 
 	return value;
 }
