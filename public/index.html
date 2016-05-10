@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="app">
 
 <head>
 
@@ -128,8 +128,15 @@
                               </div>
                             </div>
                         </div>
-                        <div class="row" id="summomers">
-
+                        <div class="row" id="summomers" ng-controller="ResultsCtrl">
+                            <div class="well" ng-repeat="r in results">
+                                <h4>{{r.name}}:</h4>
+                                <div class="" ng-repeat="period in r.data">
+                                    <h5>{{period._id.moment}} - League: {{period._id.league}} - Division: {{period._id.division}} - Moment: {{period.moment}}</h5>
+                                    {{period.summoners}}
+                                    
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -243,6 +250,8 @@
         </div>
     </footer>
 
+    <!-- Angular -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.5/angular.min.js"></script>
     <!-- jQuery -->
     <script src="js/jquery.js"></script>
 
