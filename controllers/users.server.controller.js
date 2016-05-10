@@ -50,8 +50,8 @@ module.exports = {
  			find_and_create_summoner_list,
  			find_each_summoner_name
  		], function(err, list_of_options){
- 			//needed list
- 			
+ 			//list_of_options is the needed list to go anywhere wanted
+ 			console.log(list_of_options);
  			res.send("ok");
  		});
 	},
@@ -112,10 +112,11 @@ function find_recent_games(summoner_id, callback) {
 function save_summoner_fellow_player(games, summoner_id, callback) {
     var fellowPlayers = "";
 
-    each(games, function(value, each_callback){
-    	each(value["fellowPlayers"], function(value2, each_callback2){
+    each(games, function(value, each_callback_1){
+    	each(value["fellowPlayers"], function(value2, each_callback_2){
     		fellowPlayers += value2.summonerId+",";
     		var hour_played = moment(parseInt(value.createDate)).format("HH:mm").toString();
+
         	Summoner.update(
         	{
         		"summoner.summoner_id": summoner_id,
@@ -137,10 +138,10 @@ function save_summoner_fellow_player(games, summoner_id, callback) {
         	{
         		upsert: true
         	}, function(err, inserted){
-        		each_callback2(null);
+        		each_callback_2(null);
         	});
     	}, function(err){
-			each_callback(null);
+			each_callback_1(null);
 		});
     }, function(err){
 		callback(null, summoner_id, fellowPlayers);
@@ -235,6 +236,11 @@ function find_insert_division_tier_fellows(fellowPlayers, summoner_id, callback)
 	);
 }
 
+/*
+ * Find the moment most happened for a user being requested
+ * returns a list with id, moment (manhã, noite, etc), league, division, moment (how many times a given moment exists)
+ */
+
 function find_time_and_elo(callback){
 	Summoner.aggregate(
 		[
@@ -269,6 +275,11 @@ function find_time_and_elo(callback){
 			callback(null, summoner_info);
 		});
 }
+
+/*
+ * Creates a list of summoners that match the time and league of a given summoner
+ * this list is created inside each occurrence of summoner_info, generated in find_time_and_elo()
+ */
 
 function find_and_create_summoner_list(summoner_info, callback){
 	var summoners_ids = [];
@@ -316,18 +327,11 @@ function find_and_create_summoner_list(summoner_info, callback){
 	});
 }
 
-function find_each_summoner_name(summoner_info, summoners_ids, callback){
-	
-/*	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/'+summoners_ids.toString()+'?api_key='+config.key, function (error, response, body) {
-	  if (!error && response.statusCode == 200) {
-	    body = (JSON.parse(body));
-	    console.log(body);
-    	callback(null, body["games"]);
-	  }else{
-	  	callback({error: error, response: response});
-	  }
-	});*/
+/*
+ * Find the name of each summoner in summoner_info
+ */
 
+function find_each_summoner_name(summoner_info, summoners_ids, callback){
 	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST);
 
 	whilst(
@@ -335,11 +339,13 @@ function find_each_summoner_name(summoner_info, summoners_ids, callback){
 	    function(whilst_callback){
     		var summoners_ids_spliced = summoners_ids.splice(0, MAXIMUM_IDS_PER_REQUEST);
     		summoners_ids_spliced = summoners_ids_spliced.toString();
+
     		if(summoners_ids_spliced != "" && summoners_ids_spliced != " "){
 		    	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/'+summoners_ids_spliced+'?api_key='+config.key, function (error, response, body) {
 				  if (!error && response.statusCode == 200) {
 				    body = (JSON.parse(body));
 		        	summoners_ids_spliced = summoners_ids_spliced.split(",");
+
 			    	each(summoners_ids_spliced, function(value, each_callback_1){
 			    		if(body[value] != undefined){
 							each(summoner_info, function(each_info, each_callback_2){
