@@ -33,8 +33,9 @@ module.exports = {
 	},
 
 	find: function(req, res){
-		name = req.query.name;
-		res.json('aguarde');
+		var name = req.query.name;
+		var processId = req.query.processId;
+		res.json({ success: true, 'summoner': name });
 
 		process_summoner();		
 	},

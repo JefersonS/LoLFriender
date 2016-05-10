@@ -10,9 +10,12 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var notification = require('./lib/notification');
 
 
 var app = express();
+
+app.io = notification.getSocketIo();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

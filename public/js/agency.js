@@ -24,3 +24,33 @@ $('body').scrollspy({
 $('.navbar-collapse ul li a').click(function() {
     $('.navbar-toggle:visible').click();
 });
+
+
+$(function(){
+	var socket = io();
+
+	socket.on('connect', function(s){
+
+	});
+	socket.on('searchReady', function(s){
+		console.log(s);
+	});
+
+	$("#inProgress").hide();
+	$("#findBtn").click(function(){
+		var name = $("#name").val();
+		var processId = new Date().getTime();
+
+		if(name!=""){
+			$("#inProgress").slideDown();
+			$("#name").attr("disabled", "disabled");
+			$("#findBtn").hide();
+
+
+			$.get('/users/find', { proc: processId, name: name }, function(ret){
+				$("#summomers").append("<div id='proc"+processId+">'<h4>"+name+"</h4><p>In progress...</p></div>");
+			});
+
+		}
+	});
+});
