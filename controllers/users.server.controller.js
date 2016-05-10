@@ -401,11 +401,11 @@ function find_each_summoner_name(id, region, summoner_info, summoners_ids, callb
 }
 
 function define_moment(value){
-	if(value >= MADRUGADA && value < MANHA){ value = "madrugada"; }
-	if(value >= MANHA && value < DIA){ value = "manha"; }
-	if(value >= DIA && value < TARDE){ value = "dia"; }
-	if(value >= TARDE && value < NOITE){ value = "tarde"; }
-	if(value >= NOITE && value <= FIM_NOITE){ value = "noite"; }
+	if(value >= MADRUGADA && value < MANHA){ value = "dawn"; }
+	if(value >= MANHA && value < DIA){ value = "morning"; }
+	if(value >= DIA && value < TARDE){ value = "day"; }
+	if(value >= TARDE && value < NOITE){ value = "afternoon"; }
+	if(value >= NOITE && value <= FIM_NOITE){ value = "night"; }
 
 	return value;
 }
