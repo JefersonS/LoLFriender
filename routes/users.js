@@ -7,6 +7,6 @@ router.get('/index', usersController.index);
 
 router.get('/find', usersController.find);
 
-router.post('/tell_summoner', usersController.tell_summoner);
+router.get('/getFriends', usersController.get_friends);
 
 module.exports = router;

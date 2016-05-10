@@ -9,16 +9,19 @@
  */	
 
 var request = require('request');
-var waterfall = require("async/waterfall");
+var async = require("async");
+
 var each = require("async/each");
 var whilst = require("async/whilst");
 var MongoClient = require("mongodb").MongoClient;
 var Summoner = require('mongoose').model('Summoner');
 var moment = require('moment');
 config = require('../config/config');
-var name = "";
+var io = require('../lib/notification').getSocketIo();
+
+/*var name = "";
 var region = "";
-var id = "";
+var id = "";*/
 
 const MAXIMUM_IDS_PER_REQUEST = 10;
 const MADRUGADA = "00:00";
@@ -36,24 +39,26 @@ module.exports = {
 	find: function(req, res){
 		var name = req.query.name;
 		var processId = req.query.processId;
-		var region = req.query.region;
+		var region = req.query.region ;
 		
+		process_summoner(region, name, processId);		
+
 		res.json({ success: true, 'summoner': name });
 
-		process_summoner();		
 	},
 
-	tell_summoner: function(req, res){
-		var name = req.body.name;
-		id = req.body.id;
- 		waterfall([
- 			find_time_and_elo,
- 			find_and_create_summoner_list,
- 			find_each_summoner_name
+	get_friends: function(req, res){
+		console.log('opa');
+		var name = req.query.name;
+		var id = req.query.id;
+		var region = req.query.region;
+
+ 		async.waterfall([
+ 			async.apply(find_time_and_elo, id),
+ 			async.apply(find_and_create_summoner_list, id),
+ 			async.apply(find_each_summoner_name, id, region)
  		], function(err, list_of_options){
- 			//needed list
- 			
- 			res.send("ok");
+ 			res.send(list_of_options);
  		});
 	},
 }
@@ -62,17 +67,24 @@ module.exports = {
  * Waterfall for all the processes related to the summoner
  */
 
-function process_summoner(){
-		waterfall([
-			find_id_by_name,
-			find_recent_games,
-			save_summoner_fellow_player,
-			find_insert_division_tier_summoner,
-			find_insert_division_tier_fellows
+function process_summoner(region, name, processId){
+		var summoner_id;
+		async.waterfall([
+			async.apply(find_id_by_name, region, name, processId),
+			function(id, callback){
+				summoner_id = id;
+				callback(null, id);
+			},
+			async.apply(find_recent_games, region, name, processId),
+			async.apply(save_summoner_fellow_player, region, name, processId),
+			async.apply(find_insert_division_tier_summoner, region, name, processId),
+			async.apply(find_insert_division_tier_fellows, region, name, processId)
 		], function (err, summoner_id) {
-			console.log("End of process for summoner: " + name + " id: " + summoner_id);
-			request.post('https://9804b83f.ngrok.io/users/tell_summoner').form({name:name, id: summoner_id});
+			//console.log("End of process for summoner: " + name + " id: " + summoner_id);
+			//request.post('https://9804b83f.ngrok.io/users/tell_summoner').form({name:name, id: summoner_id});
 			//request.post('http://service.com/upload').form({key:'value'})
+			console.log(err);
+			io.emit("searchReady", { processId: processId, name: name, region: region, id: summoner_id });
 		});		
 	}
 
@@ -80,7 +92,7 @@ function process_summoner(){
  * Find summoner's ID by nane
  */
 
-function find_id_by_name(callback) {
+function find_id_by_name(region, name, processId, callback) {
 	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/by-name/'+name+'?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    body = (JSON.parse(body));
@@ -95,7 +107,7 @@ function find_id_by_name(callback) {
  * Find recent games of summoner_id
  */
 
-function find_recent_games(summoner_id, callback) {
+function find_recent_games(region, name, processId, summoner_id, callback) {
 	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.3/game/by-summoner/'+summoner_id+'/recent?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    body = (JSON.parse(body));
@@ -110,7 +122,7 @@ function find_recent_games(summoner_id, callback) {
  * Create a registry for each fellow player with their champion id
  */
 
-function save_summoner_fellow_player(games, summoner_id, callback) {
+function save_summoner_fellow_player(region, name, processId, games, summoner_id, callback) {
     var fellowPlayers = "";
 
     each(games, function(value, each_callback){
@@ -152,7 +164,7 @@ function save_summoner_fellow_player(games, summoner_id, callback) {
  * Find and insert division and tier by summoner id
  */
 
-function find_insert_division_tier_summoner(summoner_id, fellowPlayers, callback){
+function find_insert_division_tier_summoner(region, name, processId, summoner_id, fellowPlayers, callback){
 	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v2.5/league/by-summoner/'+summoner_id+'/entry?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {
 	    body = (JSON.parse(body));
@@ -183,7 +195,7 @@ function find_insert_division_tier_summoner(summoner_id, fellowPlayers, callback
  * Find and insert division and tier by fellow player list of summoner id
  */
 
-function find_insert_division_tier_fellows(fellowPlayers, summoner_id, callback){
+function find_insert_division_tier_fellows(region, name, processId, fellowPlayers, summoner_id, callback){
 	var fellowPlayers_to_array = fellowPlayers.split(",");
 	var times_to_repeat = parseInt(fellowPlayers_to_array.length/MAXIMUM_IDS_PER_REQUEST);
 
@@ -236,7 +248,7 @@ function find_insert_division_tier_fellows(fellowPlayers, summoner_id, callback)
 	);
 }
 
-function find_time_and_elo(callback){
+function find_time_and_elo(id, callback){
 	Summoner.aggregate(
 		[
 			{
@@ -271,7 +283,7 @@ function find_time_and_elo(callback){
 		});
 }
 
-function find_and_create_summoner_list(summoner_info, callback){
+function find_and_create_summoner_list(id, summoner_info, callback){
 	var summoners_ids = [];
 
 	each(summoner_info, function(each_info, each_callback_1){
@@ -317,7 +329,7 @@ function find_and_create_summoner_list(summoner_info, callback){
 	});
 }
 
-function find_each_summoner_name(summoner_info, summoners_ids, callback){
+function find_each_summoner_name(id, region, summoner_info, summoners_ids, callback){
 	
 /*	request('https://'+region+'.api.pvp.net/api/lol/'+region+'/v1.4/summoner/'+summoners_ids.toString()+'?api_key='+config.key, function (error, response, body) {
 	  if (!error && response.statusCode == 200) {

@@ -33,12 +33,17 @@ $(function(){
 
 	});
 	socket.on('searchReady', function(s){
-		console.log(s);
+		$.get('/users/getFriends', s, function(data){
+			console.log(data);
+			$("#summomers").append(data);
+		});
+		console.log("serachReady", s);
 	});
 
 	$("#inProgress").hide();
 	$("#findBtn").click(function(){
 		var name = $("#name").val();
+		var region = $("#region").val();
 		var processId = new Date().getTime();
 
 		if(name!=""){
@@ -47,8 +52,8 @@ $(function(){
 			$("#findBtn").hide();
 
 
-			$.get('/users/find', { proc: processId, name: name }, function(ret){
-				$("#summomers").append("<div id='proc"+processId+">'<h4>"+name+"</h4><p>In progress...</p></div>");
+			$.get('/users/find', { processId: processId, name: name, region: region}, function(ret){
+				//$("#summomers").append("<div id='proc"+processId+">'<h4>"+name+"</h4><p>In progress...</p></div>");
 			});
 
 		}
