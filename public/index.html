@@ -134,7 +134,7 @@
                                 <div class="" ng-repeat="period in r.data">
                                     <h5>{{period._id.moment}} - League: {{period._id.league}} - Division: {{period._id.division}} - Moment: {{period.moment}}</h5>
                                     
-                                    <span ng-repeat="summoner in period.summoners">{{summoner}}
+                                    <span ng-repeat="summoner in period.summoners">{{summoner.name}} {{summoner.division}} {{summoner.league}}
                                         <img src="http://ddragon.leagueoflegends.com/cdn/6.9.1/img/profileicon/{{summoner.id}}.png">
                                     </span>
                                 </div>
