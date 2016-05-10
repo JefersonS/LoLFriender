@@ -131,8 +131,9 @@
                         <div class="row" id="summomers" ng-controller="ResultsCtrl">
                             <div class="well" ng-repeat="r in results">
                                 <h2>{{r.name}}:</h2>
+                                <div class="alert alert-danger" ng-show="r.data.length==0">We didnt find any suggestion for you. Try playing a little more matches or try again later.</div>
                                 <div class="" ng-repeat="period in r.data">
-                                    <h3>{{period._id.moment}} - League: {{period._id.league}} - Division: {{period._id.division}} - Moment: {{period.moment}}</h3>
+                                    <h3>Period: {{period._id.moment}}</h3>
                                     
 
                                     <div class="media" ng-repeat="summoner in period.summoners">
@@ -141,7 +142,8 @@
                                       </div>
                                       <div class="media-body">
                                         <h4 class="media-heading">{{summoner.name}}</h4>
-                                        {{summoner.name}} {{summoner.division}} {{summoner.league}}
+                                        Division: {{summoner.division}}<br>
+                                        League: {{summoner.league}}
                                       </div>
                                     </div>
 
