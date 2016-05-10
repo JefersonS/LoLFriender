@@ -2,7 +2,7 @@ LoLFriender
 ===================
 
 
-LoL Friends was created as a way of discoverying new summoners to play with in League of Legends. We use information like previous games played and formers fellows.
+LoL Friender was created as a way of discoverying new summoners to play with in League of Legends. We use information like previous games played and formers fellows.
 
 ----------
 
