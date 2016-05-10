@@ -9,7 +9,7 @@ LoLFriender was built as a online tool where Summoners (players) can find other 
 Pre-requirements
 -------------
 
-The project was built using NodeJS and MongoDB. So after installing that just npm install inside the working directory. 
+The project was built using NodeJS and MongoDB. So after installing that, just npm install inside the working directory (for installing the dependencies) and later node bin/www to start the server. Then just open the browser in the address: http://localhost:3000 
 
 > **Note:**
 
