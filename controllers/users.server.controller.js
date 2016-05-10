@@ -198,7 +198,7 @@ function find_insert_division_tier_summoner(region, name, processId, summoner_id
 
 function find_insert_division_tier_fellows(region, name, processId, fellowPlayers, summoner_id, callback){
 	var fellowPlayers_to_array = fellowPlayers.split(",");
-	var times_to_repeat = parseInt(fellowPlayers_to_array.length/MAXIMUM_IDS_PER_REQUEST);
+	var times_to_repeat = parseInt(fellowPlayers_to_array.length/MAXIMUM_IDS_PER_REQUEST)+1;
 
 	whilst(
 	    function(){ return times_to_repeat > 0 },
@@ -249,21 +249,12 @@ function find_insert_division_tier_fellows(region, name, processId, fellowPlayer
 	);
 }
 
-<<<<<<< .mine
-function find_time_and_elo(id, callback){
-
-
-
-
-
-=======
 /*
  * Find the moment most happened for a user being requested
  * returns a list with id, moment (manhã, noite, etc), league, division, moment (how many times a given moment exists)
  */
 
 function find_time_and_elo(callback){
->>>>>>> .theirs
 	Summoner.aggregate(
 		[
 			{
@@ -298,21 +289,12 @@ function find_time_and_elo(callback){
 		});
 }
 
-<<<<<<< .mine
-function find_and_create_summoner_list(id, summoner_info, callback){
-
-
-
-
-
-=======
 /*
  * Creates a list of summoners that match the time and league of a given summoner
  * this list is created inside each occurrence of summoner_info, generated in find_time_and_elo()
  */
 
 function find_and_create_summoner_list(summoner_info, callback){
->>>>>>> .theirs
 	var summoners_ids = [];
 
 	each(summoner_info, function(each_info, each_callback_1){
@@ -358,20 +340,12 @@ function find_and_create_summoner_list(summoner_info, callback){
 	});
 }
 
-<<<<<<< .mine
-function find_each_summoner_name(id, region, summoner_info, summoners_ids, callback){
-
-
-
-
-=======
 /*
  * Find the name of each summoner in summoner_info
  */
 
 function find_each_summoner_name(summoner_info, summoners_ids, callback){
->>>>>>> .theirs
-	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST);
+	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST)+1;
 
 	whilst(
 	    function(){ return times_to_repeat > 0 },
