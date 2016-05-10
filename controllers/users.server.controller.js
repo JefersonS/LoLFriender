@@ -198,7 +198,7 @@ function find_insert_division_tier_summoner(region, name, processId, summoner_id
 
 function find_insert_division_tier_fellows(region, name, processId, fellowPlayers, summoner_id, callback){
 	var fellowPlayers_to_array = fellowPlayers.split(",");
-	var times_to_repeat = parseInt(fellowPlayers_to_array.length/MAXIMUM_IDS_PER_REQUEST);
+	var times_to_repeat = parseInt(fellowPlayers_to_array.length/MAXIMUM_IDS_PER_REQUEST)+1;
 
 	whilst(
 	    function(){ return times_to_repeat > 0 },
@@ -249,8 +249,12 @@ function find_insert_division_tier_fellows(region, name, processId, fellowPlayer
 	);
 }
 
-function find_time_and_elo(id, callback){
+/*
+ * Find the moment most happened for a user being requested
+ * returns a list with id, moment (manhã, noite, etc), league, division, moment (how many times a given moment exists)
+ */
 
+function find_time_and_elo(callback){
 	Summoner.aggregate(
 		[
 			{
@@ -285,9 +289,12 @@ function find_time_and_elo(id, callback){
 		});
 }
 
+/*
+ * Creates a list of summoners that match the time and league of a given summoner
+ * this list is created inside each occurrence of summoner_info, generated in find_time_and_elo()
+ */
 
-function find_and_create_summoner_list(id, summoner_info, callback){
-
+function find_and_create_summoner_list(summoner_info, callback){
 	var summoners_ids = [];
 
 	each(summoner_info, function(each_info, each_callback_1){
@@ -333,10 +340,12 @@ function find_and_create_summoner_list(id, summoner_info, callback){
 	});
 }
 
+/*
+ * Find the name of each summoner in summoner_info
+ */
 
-function find_each_summoner_name(id, region, summoner_info, summoners_ids, callback){
-
-	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST);
+function find_each_summoner_name(summoner_info, summoners_ids, callback){
+	var times_to_repeat = parseInt(summoners_ids.length/MAXIMUM_IDS_PER_REQUEST)+1;
 
 	whilst(
 	    function(){ return times_to_repeat > 0 },
@@ -359,6 +368,7 @@ function find_each_summoner_name(id, region, summoner_info, summoners_ids, callb
 								each(each_info.summoners, function(info, each_callback_3){		// URGENT need of uderscore.js
 									if(info.id == value){
 /*hadouken --)*/						info.name = body[value].name;
+/*hadouken --)*/						info.profileIconId = body[value].profileIconId;
 									}
 									
 									each_callback_3(null);
