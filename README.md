@@ -1,8 +1,7 @@
 LoLFriender
 ===================
 
-
-LoL Friender was created as a way of discoverying new summoners to play with in League of Legends. We use information like previous games played and formers fellows.
+LoLFriender was built as a online tool where Summoners (players) can find other Summoners that play in their same elo and time, connecting these summoners and allowing them to meet and play together.
 
 ----------
 
