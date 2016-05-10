@@ -368,6 +368,7 @@ function find_each_summoner_name(summoner_info, summoners_ids, callback){
 								each(each_info.summoners, function(info, each_callback_3){		// URGENT need of uderscore.js
 									if(info.id == value){
 /*hadouken --)*/						info.name = body[value].name;
+/*hadouken --)*/						info.name = body[value].profileIconId;
 									}
 									
 									each_callback_3(null);
